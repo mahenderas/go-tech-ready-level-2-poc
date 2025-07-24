@@ -6,7 +6,6 @@ This workspace contains three Go microservices:
 - **Payment**: Listens to order events and updates payment status
 
 ## Features
-- JWT authentication for all APIs
 - PostgreSQL for Orders and Payments
 - Google Pub/Sub for event-driven messaging
 - Service discovery with Consul
