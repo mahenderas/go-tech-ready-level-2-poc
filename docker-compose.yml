@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./init-dbs.sql:/docker-entrypoint-initdb.d/init-dbs.sql
+  products:
+    build:
+      context: .
+      dockerfile: ./products/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - JWT_SECRET=your_jwt_secret
+      - SERVICE_DISCOVERY=consul:8500
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/products?sslmode=disable
+      - DEPLOY_ENV=local
+    depends_on:
+      - postgres
+      - consul
+  orders:
+    build:
+      context: .
+      dockerfile: ./orders/Dockerfile
+    env_file:
+      - ./orders/.env
+    ports:
+      - "8002:8002"
+    environment:
+      - JWT_SECRET=your_jwt_secret
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/orders?sslmode=disable
+      - PUBSUB_EMULATOR_HOST=pubsub:8681
+      - SERVICE_DISCOVERY=consul:8500
+      - DEPLOY_ENV=local
+    depends_on:
+      - postgres
+      - pubsub
+      - consul
+  payment:
+    build:
+      context: .
+      dockerfile: ./payment/Dockerfile
+    env_file:
+      - ./payment/.env
+    ports:
+      - "8003:8003"
+    environment:
+      - JWT_SECRET=your_jwt_secret
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/payment?sslmode=disable
+      - PUBSUB_EMULATOR_HOST=pubsub:8681
+      - SERVICE_DISCOVERY=consul:8500
+      - DEPLOY_ENV=local
+    depends_on:
+      - postgres
+      - pubsub
+      - consul
+  pubsub:
+    image: messagebird/gcloud-pubsub-emulator
+    ports:
+      - "8681:8681"
+  consul:
+    image: consul:1.15
+    ports:
+      - "8500:8500"
+volumes:
+  pg-data:

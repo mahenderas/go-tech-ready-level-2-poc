@@ -1,0 +1,10 @@
+# Ignore version control and dependency folders
+.git
+**/vendor
+**/node_modules
+**/.env
+**/*.log
+**/__pycache__
+**/.DS_Store
+**/testdata
+**/.vscode
