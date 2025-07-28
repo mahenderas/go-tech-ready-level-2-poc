@@ -8,6 +8,7 @@ import (
 	"orders/internal/db"
 	"orders/internal/handlers"
 	"orders/internal/pubsub"
+	"orders/internal/middleware"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -61,13 +62,12 @@ func main() {
 	go ps.ListenForPaymentEvents(ctx)
 
 	// HTTP handlers
-	http.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
+	http.Handle("/orders", middleware.JwtTokenValidation(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			handler.GetAllOrders(w, r)
 		case http.MethodPost:
 			if order, err := handler.CreateOrder(w, r); err == nil {
-				// Publish order event to Pub/Sub if order creation succeeded
 				go pubsub.PublishOrderEvent(ctx, ps, *order)
 			}
 		case http.MethodDelete:
@@ -75,7 +75,16 @@ func main() {
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	})
+	})))
+	// Add Handler for individual order /orders/{id}
+	http.Handle("/orders/{id}", middleware.JwtTokenValidation(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.GetOrderByID(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})))
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))

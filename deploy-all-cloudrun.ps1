@@ -2,7 +2,8 @@
 $services = @(
     @{ Name = "orders";   EnvFile = ".\orders\.env.gcp";   Image = "us-central1-docker.pkg.dev/lucky-dahlia-466206-k0/docker-repo/orders:latest" },
     @{ Name = "products"; EnvFile = ".\products\.env.gcp"; Image = "us-central1-docker.pkg.dev/lucky-dahlia-466206-k0/docker-repo/products:latest" },
-    @{ Name = "payment";  EnvFile = ".\payment\.env.gcp";  Image = "us-central1-docker.pkg.dev/lucky-dahlia-466206-k0/docker-repo/payment:latest" }
+    @{ Name = "payment";  EnvFile = ".\payment\.env.gcp";  Image = "us-central1-docker.pkg.dev/lucky-dahlia-466206-k0/docker-repo/payment:latest" },
+    @{ Name = "authentication"; EnvFile = ".\authentication\.env.gcp"; Image = "us-central1-docker.pkg.dev/lucky-dahlia-466206-k0/docker-repo/authentication:latest" }
 )
 $region = "us-central1"
 

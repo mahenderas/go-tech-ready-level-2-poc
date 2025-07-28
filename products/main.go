@@ -8,6 +8,7 @@ import (
 	"products/internal/consul"
 	"products/internal/db"
 	"products/internal/handlers"
+	"products/internal/middleware"
 
 	"github.com/joho/godotenv"
 )
@@ -47,7 +48,7 @@ func main() {
 	consul.RegisterWithConsul("products", 8001)
 
 	// HTTP handlers
-	http.HandleFunc("/products", func(w http.ResponseWriter, r *http.Request) {
+	http.Handle("/products", middleware.JwtTokenValidation(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			handler.GetAllProducts(w, r)
@@ -58,7 +59,16 @@ func main() {
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	})
+	})))
+	// Add Handler for individual product /products/{id}
+	http.Handle("/products/{id}", middleware.JwtTokenValidation(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.GetProductByID(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})))
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))

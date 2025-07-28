@@ -53,6 +53,18 @@ func (db *DB) GetAllProducts() ([]models.Product, error) {
 	return products, nil
 }
 
+func (db *DB) GetProductByID(id string) (*models.Product, error) {
+	row := db.Conn.QueryRow("SELECT id, name, price FROM products WHERE id = $1", id)
+	var p models.Product
+	if err := row.Scan(&p.ID, &p.Name, &p.Price); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // Product not found
+		}
+		return nil, err
+	}
+	return &p, nil
+}
+
 func (db *DB) EnsureProductsTable() error {
 	_, err := db.Conn.Exec(`
 	CREATE TABLE IF NOT EXISTS products (

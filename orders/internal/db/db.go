@@ -61,6 +61,24 @@ func (db *DB) GetAllOrders() ([]models.Order, error) {
 	return dbOrders, nil
 }
 
+// GetOrderByID retrieves an order by its ID
+func (db *DB) GetOrderByID(id string) (*models.Order, error) {
+	var o models.Order
+	var productsJSON []byte
+	err := db.Conn.QueryRow("SELECT id, status, amount, products FROM orders WHERE id = $1", id).Scan(&o.ID, &o.Status, &o.Amount, &productsJSON)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // Order not found
+		}
+		return nil, err
+	}
+	// Unmarshal products
+	if err := json.Unmarshal(productsJSON, &o.Products); err != nil {
+		return nil, err
+	}
+	return &o, nil
+}
+
 func (db *DB) UpdateOrderStatus(orderID, status string) error {
 	_, err := db.Conn.Exec("UPDATE orders SET status = $1 WHERE id = $2", status, orderID)
 	return err

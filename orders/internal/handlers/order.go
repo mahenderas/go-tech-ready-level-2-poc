@@ -9,6 +9,7 @@ import (
 	"orders/internal/models"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type OrderHandler struct {
@@ -23,6 +24,26 @@ func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(orders)
+}
+
+func (h *OrderHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	if id == "" {
+		http.Error(w, "Order ID is required", http.StatusBadRequest)
+		return
+	}
+	order, err := h.DB.GetOrderByID(id)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if order == nil {
+		http.Error(w, "Order not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(order)
 }
 
 // CreateOrder handles POST /orders

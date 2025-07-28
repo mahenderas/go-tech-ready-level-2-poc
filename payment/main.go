@@ -9,6 +9,7 @@ import (
 	"payment/internal/db"
 	"payment/internal/handlers"
 	"payment/internal/pubsub"
+	"payment/internal/middleware"
 
 	"github.com/joho/godotenv"
 )
@@ -64,7 +65,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))
 	})
-	http.HandleFunc("/payments", func(w http.ResponseWriter, r *http.Request) {
+	http.Handle("/payments", middleware.JwtTokenValidation(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			handler.GetPayments(w, r)
@@ -73,7 +74,7 @@ func main() {
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	})
+	})))
 
 	port := os.Getenv("PORT")
 	if port == "" {
